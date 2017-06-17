@@ -129,10 +129,25 @@ extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
         
         let baseURL = "https://image.tmdb.org/t/p/w342"
         if let posterPath = movie["poster_path"] as? String {
-            cell.movieImageView.alpha = 0.0
-            cell.movieImageView.setImageWith(URL(string: baseURL + posterPath)!)
-            UIView.animate(withDuration: 0.3, animations: { 
-                 cell.movieImageView.alpha = 1.0
+            let imageURL = NSURL(string: baseURL + posterPath)
+            let imageURLRequest = NSURLRequest(url: imageURL! as URL)
+            cell.movieImageView.setImageWith(
+                imageURLRequest as URLRequest,
+                placeholderImage: nil,
+                success: { (imageRequest, imageResponse, image) -> Void in
+                    if imageResponse != nil {
+                        print("Image was NOT cached, fade in image")
+                        cell.movieImageView.alpha = 0.0
+                        cell.movieImageView.image = image
+                        UIView.animate(withDuration: 0.3, animations: { () -> Void in
+                            cell.movieImageView.alpha = 1.0
+                        })
+                    } else {
+                        print("Image was cached so just update the image")
+                        cell.movieImageView.image = image
+                    }
+            },
+                failure: { (imageRequest, imageResponse, error) -> Void in
             })
         }
         
