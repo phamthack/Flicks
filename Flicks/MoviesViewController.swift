@@ -8,6 +8,7 @@
 
 import UIKit
 import AFNetworking
+import MBProgressHUD
 
 class MoviesViewController: UIViewController {
 
@@ -22,6 +23,10 @@ class MoviesViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         
+        feedDataFromAPI()
+    }
+    
+    func feedDataFromAPI() {
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
         let url = URL(string: "https://api.themoviedb.org/3/movie/\("now_playing")?api_key=\(apiKey)")
@@ -34,6 +39,10 @@ class MoviesViewController: UIViewController {
             delegate: nil,
             delegateQueue: OperationQueue.main
         )
+        
+        // Display HUD right before the request is made
+        MBProgressHUD.showAdded(to: self.view, animated: true)
+
         let task: URLSessionDataTask =
             session.dataTask(with: request,
                              completionHandler: { (dataOrNil, response, error) in
@@ -42,12 +51,16 @@ class MoviesViewController: UIViewController {
                                         with: data, options:[]) as? NSDictionary {
                                         print("response: \(responseDictionary)")
                                         
+                                        // Hide HUD once the network request comes back (must be done on main UI thread)
+                                        MBProgressHUD.hide(for: self.view, animated: true)
+                                        
                                         self.movies = responseDictionary["results"] as! [NSDictionary]
                                         self.tableView.reloadData()
                                     }
                                 }
             })
         task.resume()
+
     }
 
     override func didReceiveMemoryWarning() {
