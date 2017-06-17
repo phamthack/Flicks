@@ -17,7 +17,7 @@ class MoviesViewController: UIViewController {
     
     @IBOutlet weak var networkErrorLabel: UILabel!
     
-    var movies = [NSDictionary]()
+    var movies: [NSDictionary]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,7 +73,7 @@ class MoviesViewController: UIViewController {
                                         // Hide HUD once the network request comes back (must be done on main UI thread)
                                         MBProgressHUD.hide(for: self.view, animated: true)
                                         
-                                        self.movies = responseDictionary["results"] as! [NSDictionary]
+                                        self.movies = responseDictionary["results"] as? [NSDictionary]
                                         self.tableView.reloadData()
                                         
                                         self.networkErrorLabel.isHidden = true
@@ -99,7 +99,7 @@ class MoviesViewController: UIViewController {
         let cell = sender as! UITableViewCell
         let indexPath = tableView.indexPath(for: cell)
         
-        let movie = movies[indexPath!.row]
+        let movie = movies![indexPath!.row]
         let detailViewController = segue.destination as! DetailsViewController
         detailViewController.movie = movie
     }
@@ -110,26 +110,40 @@ class MoviesViewController: UIViewController {
 extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return movies.count
+        var moviesCount = 0
+        if let movies = movies {
+            moviesCount = movies.count
+        }
+        return moviesCount
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MovieCell
         
-        let movie = movies[indexPath.row]
+        let movie = movies![indexPath.row]
         let title = movie["title"] as! String
-        let overview = movie["overview"] as! String
-        
         cell.movieTitleLabel.text = title
+        
+        let overview = movie["overview"] as! String
         cell.movieOverviewLabel.text = overview
         
-        if let poster_path = movie["poster_path"] as? String {
-        
-            let baseUrl = "https://image.tmdb.org/t/p/w342"
-        
-            cell.movieImageView.setImageWith(URL(string: baseUrl + poster_path)!)
+        let baseURL = "https://image.tmdb.org/t/p/w342"
+        if let posterPath = movie["poster_path"] as? String {
+            cell.movieImageView.alpha = 0.0
+            cell.movieImageView.setImageWith(URL(string: baseURL + posterPath)!)
+            UIView.animate(withDuration: 0.3, animations: { 
+                 cell.movieImageView.alpha = 1.0
+            })
         }
+        
+        let selectedBackground = UIView()
+        selectedBackground.backgroundColor = UIColor.green
+        cell.selectedBackgroundView = selectedBackground
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
 
