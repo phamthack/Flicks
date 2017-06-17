@@ -13,20 +13,34 @@ import MBProgressHUD
 class MoviesViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
+    var refreshControl: UIRefreshControl!
     
     var movies = [NSDictionary]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //Initialize a UIRefreshControl
+        refreshControl = UIRefreshControl()
+        refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        refreshControl.addTarget(self, action: #selector(MoviesViewController.refreshControlAction), for: UIControlEvents.valueChanged)
+        
+        //add refresh control to table view
+        tableView.insertSubview(refreshControl, at: 0)
 
         // Do any additional setup after loading the view.
         tableView.delegate = self
         tableView.dataSource = self
         
-        feedDataFromAPI()
+        fetchDataFromAPI()
+        
     }
     
-    func feedDataFromAPI() {
+    func refreshControlAction() {
+        fetchDataFromAPI()
+    }
+    
+    func fetchDataFromAPI() {
         
         let apiKey = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
         let url = URL(string: "https://api.themoviedb.org/3/movie/\("now_playing")?api_key=\(apiKey)")
@@ -56,6 +70,9 @@ class MoviesViewController: UIViewController {
                                         
                                         self.movies = responseDictionary["results"] as! [NSDictionary]
                                         self.tableView.reloadData()
+                                        
+                                        // Tell the refreshControl to stop spinning
+                                        self.refreshControl.endRefreshing()
                                     }
                                 }
             })
