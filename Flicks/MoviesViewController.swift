@@ -15,6 +15,8 @@ class MoviesViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     var refreshControl: UIRefreshControl!
     
+    @IBOutlet weak var networkErrorLabel: UILabel!
+    
     var movies = [NSDictionary]()
     
     override func viewDidLoad() {
@@ -32,6 +34,7 @@ class MoviesViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         
+        networkErrorLabel.isHidden = true
         fetchDataFromAPI()
         
     }
@@ -60,7 +63,9 @@ class MoviesViewController: UIViewController {
         let task: URLSessionDataTask =
             session.dataTask(with: request,
                              completionHandler: { (dataOrNil, response, error) in
-                                if let data = dataOrNil {
+                                if error != nil {
+                                    self.networkErrorLabel.isHidden = false
+                                } else if let data = dataOrNil {
                                     if let responseDictionary = try! JSONSerialization.jsonObject(
                                         with: data, options:[]) as? NSDictionary {
                                         print("response: \(responseDictionary)")
@@ -70,6 +75,8 @@ class MoviesViewController: UIViewController {
                                         
                                         self.movies = responseDictionary["results"] as! [NSDictionary]
                                         self.tableView.reloadData()
+                                        
+                                        self.networkErrorLabel.isHidden = true
                                         
                                         // Tell the refreshControl to stop spinning
                                         self.refreshControl.endRefreshing()
