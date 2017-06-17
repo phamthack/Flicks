@@ -17,7 +17,11 @@ class MoviesViewController: UIViewController {
     
     @IBOutlet weak var networkErrorLabel: UILabel!
     
+    var searchBar:UISearchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: 280, height: 20))
+    var searchActive : Bool = false
+
     var movies: [NSDictionary]?
+    var searchMovies: [NSDictionary]?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,9 +37,14 @@ class MoviesViewController: UIViewController {
         // Do any additional setup after loading the view.
         tableView.delegate = self
         tableView.dataSource = self
+        searchBar.delegate = self
         
         networkErrorLabel.isHidden = true
         fetchDataFromAPI()
+        
+        searchBar.placeholder = "Search"
+        let leftNavBarButton = UIBarButtonItem(customView:searchBar)
+        self.navigationItem.leftBarButtonItem = leftNavBarButton
         
     }
     
@@ -99,7 +108,13 @@ class MoviesViewController: UIViewController {
         let cell = sender as! UITableViewCell
         let indexPath = tableView.indexPath(for: cell)
         
-        let movie = movies![indexPath!.row]
+        var movie = NSDictionary()
+        if searchActive {
+            movie = searchMovies![indexPath!.row]
+        } else {
+            
+            movie = movies![indexPath!.row]
+        }
         let detailViewController = segue.destination as! DetailsViewController
         detailViewController.movie = movie
     }
@@ -111,16 +126,31 @@ extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         var moviesCount = 0
-        if let movies = movies {
-            moviesCount = movies.count
+        
+        if searchActive {
+            if let searchMovies = searchMovies {
+                moviesCount = searchMovies.count
+            }
         }
+        else {
+            if let movies = movies{
+                moviesCount = movies.count
+            }
+        }
+        
         return moviesCount
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MovieCell
         
-        let movie = movies![indexPath.row]
+        var movie = NSDictionary()
+        if searchActive {
+            movie = searchMovies![indexPath.row]
+        } else {
+            movie = movies![indexPath.row]
+        }
+        
         let title = movie["title"] as! String
         cell.movieTitleLabel.text = title
         
@@ -160,6 +190,36 @@ extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
     }
-    
+}
 
+extension MoviesViewController: UISearchBarDelegate {
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        searchActive = true;
+    }
+    
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        searchActive = false;
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchActive = false;
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchActive = false;
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        let searchPredicate = NSPredicate(format: "title CONTAINS[C] %@", searchText)
+        searchMovies = (movies! as NSArray).filtered(using: searchPredicate) as? [NSDictionary]
+        
+        if(searchMovies?.count == 0){
+            searchActive = false;
+        } else {
+            searchActive = true;
+        }
+        self.tableView.reloadData()
+    }
 }
