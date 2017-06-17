@@ -17,7 +17,7 @@ class MoviesViewController: UIViewController {
     
     @IBOutlet weak var networkErrorLabel: UILabel!
     
-    var searchBar:UISearchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: 280, height: 20))
+    var searchBar:UISearchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: 290, height: 20))
     var searchActive : Bool = false
 
     var movies: [NSDictionary]?
@@ -74,6 +74,7 @@ class MoviesViewController: UIViewController {
                              completionHandler: { (dataOrNil, response, error) in
                                 if error != nil {
                                     self.networkErrorLabel.isHidden = false
+                                    self.searchBar.isUserInteractionEnabled = false
                                 } else if let data = dataOrNil {
                                     if let responseDictionary = try! JSONSerialization.jsonObject(
                                         with: data, options:[]) as? NSDictionary {
@@ -86,6 +87,7 @@ class MoviesViewController: UIViewController {
                                         self.tableView.reloadData()
                                         
                                         self.networkErrorLabel.isHidden = true
+                                        self.searchBar.isUserInteractionEnabled = true
                                         
                                         // Tell the refreshControl to stop spinning
                                         self.refreshControl.endRefreshing()
