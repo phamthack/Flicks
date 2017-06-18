@@ -13,9 +13,10 @@ import MBProgressHUD
 class MoviesViewController: UIViewController {
 
     @IBOutlet weak var tableView: UITableView!
-    var refreshControl: UIRefreshControl!
     
     @IBOutlet weak var networkErrorLabel: UILabel!
+    
+    var refreshControl: UIRefreshControl!
     
     var searchBar:UISearchBar = UISearchBar(frame: CGRect(x: 0, y: 0, width: 290, height: 20))
     var searchActive : Bool = false
@@ -26,6 +27,11 @@ class MoviesViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Do any additional setup after loading the view.
+        tableView.delegate = self
+        tableView.dataSource = self
+        searchBar.delegate = self
+        
         //Initialize a UIRefreshControl
         refreshControl = UIRefreshControl()
         refreshControl.attributedTitle = NSAttributedString(string: "Pull to refresh")
@@ -33,19 +39,13 @@ class MoviesViewController: UIViewController {
         
         //add refresh control to table view
         tableView.insertSubview(refreshControl, at: 0)
-
-        // Do any additional setup after loading the view.
-        tableView.delegate = self
-        tableView.dataSource = self
-        searchBar.delegate = self
-        
         networkErrorLabel.isHidden = true
-        fetchDataFromAPI()
         
         searchBar.placeholder = "Search"
         let leftNavBarButton = UIBarButtonItem(customView:searchBar)
         self.navigationItem.leftBarButtonItem = leftNavBarButton
         
+        fetchDataFromAPI()
     }
     
     func refreshControlAction() {
@@ -111,17 +111,16 @@ class MoviesViewController: UIViewController {
         let indexPath = tableView.indexPath(for: cell)
         
         var movie = NSDictionary()
-        if searchActive {
+        if searchActive && searchMovies != nil {
             movie = searchMovies![indexPath!.row]
         } else {
             
             movie = movies![indexPath!.row]
         }
+        
         let detailViewController = segue.destination as! DetailsViewController
         detailViewController.movie = movie
     }
-    
-
 }
 
 extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
@@ -147,7 +146,7 @@ extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MovieCell", for: indexPath) as! MovieCell
         
         var movie = NSDictionary()
-        if searchActive {
+        if searchActive && searchMovies != nil {
             movie = searchMovies![indexPath.row]
         } else {
             movie = movies![indexPath.row]
@@ -168,14 +167,12 @@ extension MoviesViewController: UITableViewDelegate, UITableViewDataSource {
                 placeholderImage: nil,
                 success: { (imageRequest, imageResponse, image) -> Void in
                     if imageResponse != nil {
-                        print("Image was NOT cached, fade in image")
                         cell.movieImageView.alpha = 0.0
                         cell.movieImageView.image = image
                         UIView.animate(withDuration: 0.3, animations: { () -> Void in
                             cell.movieImageView.alpha = 1.0
                         })
                     } else {
-                        print("Image was cached so just update the image")
                         cell.movieImageView.image = image
                     }
             },

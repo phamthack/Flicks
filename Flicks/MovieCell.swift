@@ -14,7 +14,6 @@ class MovieCell: UITableViewCell {
     @IBOutlet weak var movieTitleLabel: UILabel!
     @IBOutlet weak var movieOverviewLabel: UILabel!
     
-    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
@@ -25,5 +24,4 @@ class MovieCell: UITableViewCell {
 
         // Configure the view for the selected state
     }
-
 }

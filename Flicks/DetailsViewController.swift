@@ -31,7 +31,6 @@ class DetailsViewController: UIViewController {
         overviewLabel.text = overview
         overviewLabel.sizeToFit()
         
-        
         if let poster_path = movie["poster_path"] as? String {
             
             let baseUrl = "https://image.tmdb.org/t/p/w342"
